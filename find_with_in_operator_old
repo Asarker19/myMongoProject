@@ -1,0 +1,87 @@
+// Connect to the 'catalyst' database
+var db = connect("localhost:27017/catalyst");
+// Use the 'registry_persons' collection
+var personsConnection = db.getCollection("registry_persons");
+
+
+var updateItem = true;
+var recordCount = 0;
+/*
+function correctPreviousNextKeys(domainCollection) {
+    var keyMapping = { 'NextDomainId': 'nextId', 'PreviousDomainId': 'previousId' }
+    for (const [index, value] of Object.entries(domainCollection)) {
+        for (const [keyMappingSource, keyMappingTarget] of Object.entries(keyMapping)) {
+            if (domainCollection[index].hasOwnProperty('attributes')) {
+                if (domainCollection[index]['attributes'].hasOwnProperty(keyMappingSource)) {
+                    domainCollection[index][keyMappingTarget] = domainCollection[index]['attributes'][keyMappingSource]
+					print("Document details: " + domainCollection)
+                    delete domainCollection[index]['attributes'][keyMappingSource]
+				}
+            }
+        }
+    }
+    return domainCollection
+}
+*/
+
+var query = {
+	identifier: {
+		$in: [
+		"arsdkadhkasdkaoasioasdodioasiodjoisjdioqwjoirt46464738939302020202hjdhnjjnjhnjhnjnjhjnsdws", 
+		"asayhiortnklnlkrt1541285sdsdffvastatgagagaaga"
+		]
+	}
+};
+
+// Find documents based on the query
+var itemCollection = personsConnection.find(query);
+
+// Iterate over the cursor and print the results
+/*itemCollection.forEach(function (document) {
+*  printjson(document);
+* });
+*/
+
+/*
+itemCollection.forEach(function (item) {
+    print("Updating Domain Tree Previous and Next keys: " + item._id);
+    ['identifier', 'prevVersionId', 'nextVersionId'].forEach(function (domainName) {
+        if (item.domainTree.hasOwnProperty(domainName)) {
+            item.domainTree[domainName] = correctPreviousNextKeys(item.domainTree[domainName]);
+        }
+    });
+    if (updateItem) {
+        recordCount++;
+        try {
+            print("Saving MongoDB Record. " + item._id);
+            personsConnection.updateOne({ _id: item._id }, { "$set": item });
+        } catch (rollerror) {
+            print("Update Error: " + rollerror);
+        }
+    }
+});
+*/
+
+// Iterate over the cursor and print the results
+itemCollection.forEach(function (item) {
+  print("Updating Domain Tree Previous and Next keys: " + item._id + "pId: " + item.prevVersionId + "nId: " + item.nextVersionId);
+  ['prevVersionId', 'nextVersionId'].forEach(function (field) {
+	   if (item.domainTree.hasOwnProperty(field)) {
+		print("Processing field: " + field);
+      delete item.domainTree[field];
+    }
+  });
+
+  if (updateItem) {
+    recordCount++;
+    try {
+      print("Saving MongoDB Record. " + item._id);
+      personsConnection.updateOne({ _id: item._id }, { "$set": item });
+    } catch (rollerror) {
+      print("Update Error: " + rollerror);
+    }
+  }
+});
+
+
+print("Finished. " + recordCount + " Items Updated");
